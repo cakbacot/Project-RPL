@@ -1,0 +1,27 @@
+@startuml
+autonumber
+participant "TransactionController" as Trans
+control "BalanceController" as Bal
+entity "Database SQLite" as DB
+boundary "DashboardUI" as UI
+
+title Sequence Diagram UC-07: Pembaruan Saldo Otomatis (Included)
+
+Trans -> Bal: triggerBalanceUpdate()
+activate Bal
+
+Bal -> DB: sumTotalPemasukan()
+activate DB
+DB --> Bal: totalPemasukan
+Bal -> DB: sumTotalPengeluaran()
+DB --> Bal: totalPengeluaran
+deactivate DB
+
+Bal -> Bal: calculateBalance(totalPemasukan - totalPengeluaran)
+Bal -> UI: updateBalanceLabel(totalSaldo)
+activate UI
+UI --> Bal: labelUpdated
+deactivate UI
+Bal --> Trans: balanceUpdateComplete
+deactivate Bal
+@enduml

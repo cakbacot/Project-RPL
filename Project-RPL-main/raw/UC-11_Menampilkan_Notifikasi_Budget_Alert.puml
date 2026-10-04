@@ -1,0 +1,41 @@
+@startuml
+autonumber
+participant "TransactionController" as Trans
+control "BudgetAlertController" as Alert
+entity "Database SQLite" as DB
+boundary "TransactionFormUI" as UI
+actor "Pengguna (User)" as User
+
+title Sequence Diagram UC-11: Menampilkan Notifikasi Budget Alert (Extended)
+
+Trans -> Alert: evaluateBudgetStatus(currentExpense)
+activate Alert
+
+Alert -> DB: getActiveBudgetLimit()
+activate DB
+DB --> Alert: budgetLimitData
+Alert -> DB: calculateTotalExpenseForPeriod()
+DB --> Alert: totalAccumulatedExpense
+deactivate DB
+
+Alert -> Alert: calculatePercentage(totalExpense / budgetLimit)
+
+alt Akumulasi Pengeluaran >= 80% AND <= 100%
+    Alert -> UI: showYellowAlert("Mendekati Batas Anggaran!")
+    activate UI
+    UI --> User: tampilkanPopUpKuningMendekatiBatas()
+    User -> UI: tekanOK()
+    UI --> Alert: dialogClosed
+    deactivate UI
+
+else Akumulasi Pengeluaran > 100%
+    Alert -> UI: showRedAlert("Overbudget! Pengeluaran Melampaui Batas")
+    activate UI
+    UI --> User: tampilkanPopUpMerahOverbudget()
+    User -> UI: tekanOK()
+    UI --> Alert: dialogClosed
+    deactivate UI
+end
+Alert --> Trans: evaluationComplete
+deactivate Alert
+@enduml

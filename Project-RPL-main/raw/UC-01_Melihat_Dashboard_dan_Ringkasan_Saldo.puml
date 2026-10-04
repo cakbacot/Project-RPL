@@ -1,0 +1,35 @@
+@startuml
+autonumber
+actor "Pengguna (User)" as User
+boundary "DashboardUI" as UI
+control "DashboardController" as Controller
+entity "Database SQLite" as DB
+
+title Sequence Diagram UC-01: Melihat Dashboard & Ringkasan Saldo
+
+User -> UI: bukaAplikasiKuroFin()
+activate UI
+UI -> Controller: loadDashboardData()
+activate Controller
+
+Controller -> DB: fetchAllTransactions()
+activate DB
+
+alt Data Transaksi Tersedia
+    DB --> Controller: dataTransaksiList
+    Controller -> Controller: calculateTotalBalance(pemasukan - pengeluaran)
+    Controller --> UI: displaySummary(saldoTotal, totalPemasukan, totalPengeluaran)
+    UI --> User: tampilkanRingkasanSaldo()
+else Basis Data Kosong
+    DB --> Controller: dataEmpty
+    Controller --> UI: displaySummary(saldo: 0)
+    UI --> User: tampilkanSaldoNol()
+else Gagal Membaca File Database
+    DB --> Controller: errorReadAccess
+    deactivate DB
+    Controller --> UI: showErrorAlert("Gagal Membaca Basis Data")
+    deactivate Controller
+    UI --> User: tampilkanPesanErrorAkses()
+    deactivate UI
+end
+@enduml

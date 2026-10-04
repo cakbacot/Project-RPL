@@ -1,0 +1,41 @@
+@startuml
+autonumber
+actor "Pengguna (User)" as User
+boundary "BudgetUI" as UI
+control "BudgetController" as Controller
+entity "Database SQLite" as DB
+
+title Sequence Diagram UC-10: Memperbarui atau Menghapus Batas
+
+User -> UI: pilihAturanBatas(budgetId)
+activate UI
+
+alt Aksi: Memperbarui Batas
+    User -> UI: ubahNominalAndKlikPerbarui(budgetId, newNominal)
+    UI -> Controller: updateBudgetLimit(budgetId, newNominal)
+    activate Controller
+    Controller -> DB: updateBudgetRecord(budgetId, newNominal)
+    activate DB
+    DB --> Controller: statusUpdated
+    deactivate DB
+    Controller --> UI: pesanSukses("Aturan Batas Diperbarui")
+
+else Aksi: Menghapus Batas
+    User -> UI: klikHapusBatas(budgetId)
+    UI --> User: tampilkanKonfirmasi("Hapus Aturan Ini?")
+    alt Konfirmasi Disetujui ("Ya")
+        User -> UI: konfirmasiHapus("Ya")
+        UI -> Controller: deleteBudgetLimit(budgetId)
+        Controller -> DB: deleteBudgetRecord(budgetId)
+        activate DB
+        DB --> Controller: statusDeleted
+        deactivate DB
+        Controller --> UI: pesanSukses("Aturan Batas Dihapus")
+    else Konfirmasi Ditolak ("Tidak")
+        User -> UI: konfirmasiHapus("Tidak")
+        UI --> User: batalHapus()
+        deactivate Controller
+        deactivate UI
+    end
+end
+@enduml

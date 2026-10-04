@@ -1,0 +1,37 @@
+@startuml
+autonumber
+actor "Pengguna (User)" as User
+boundary "TransactionHistoryUI" as UI
+control "TransactionController" as Controller
+entity "Database SQLite" as DB
+
+title Sequence Diagram UC-05: Menghapus Data Transaksi
+
+User -> UI: pilihTransaksiAndKlikHapus(id)
+activate UI
+UI --> User: tampilkanDialogKonfirmasi("Hapus Data Ini?")
+
+alt Pengguna Menekan "Ya"
+    User -> UI: konfirmasiHapus("Ya")
+    UI -> Controller: deleteTransaction(id)
+    activate Controller
+    Controller -> DB: deleteTransactionRecord(id)
+    activate DB
+    DB --> Controller: statusDeleted
+    deactivate DB
+
+    note over Controller: UC-07: Pembaruan Saldo Otomatis
+    Controller -> DB: recalculateTotalBalance()
+    activate DB
+    DB --> Controller: balanceUpdated
+    deactivate DB
+
+    Controller --> UI: pesanSukses("Transaksi Berhasil Dihapus")
+    UI --> User: perbaruiTabelAndTampilkanPesanSukses()
+
+else Pengguna Menekan "Tidak"
+    User -> UI: konfirmasiHapus("Tidak")
+    UI --> User: tutupDialogAndBatalHapus()
+    deactivate UI
+end
+@enduml

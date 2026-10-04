@@ -1,0 +1,54 @@
+@startuml
+autonumber
+actor "Pengguna (User)" as User
+boundary "CategoryFormUI" as UI
+control "CategoryController" as Controller
+entity "Database SQLite" as DB
+
+title Sequence Diagram UC-08: Mengelola Kategori Transaksi
+
+User -> UI: bukaHalamanKategori()
+activate UI
+
+alt Aksi: Tambah Kategori
+    User -> UI: inputNamaKategoriAndKlikTambah(nama)
+    UI -> Controller: addCategory(nama)
+    activate Controller
+    Controller -> DB: checkDuplicateCategoryName(nama)
+    activate DB
+    alt Nama Belum Ada (Valid)
+        DB --> Controller: nameAvailable
+        Controller -> DB: insertCategory(nama)
+        DB --> Controller: statusInserted
+        Controller --> UI: pesanSukses("Kategori Berhasil Ditambahkan")
+    else Nama Duplikat
+        DB --> Controller: nameExists
+        Controller --> UI: pesanError("Nama Kategori Sudah Ada")
+    end
+
+else Aksi: Ubah Kategori
+    User -> UI: pilihKategoriAndUbahNama(id, namaBaru)
+    UI -> Controller: updateCategory(id, namaBaru)
+    Controller -> DB: updateCategoryRecord(id, namaBaru)
+    DB --> Controller: statusUpdated
+    Controller --> UI: pesanSukses("Kategori Diperbarui")
+
+else Aksi: Hapus Kategori
+    User -> UI: pilihKategoriAndKlikHapus(id)
+    UI -> Controller: deleteCategory(id)
+    Controller -> DB: checkCategoryTransactionRelation(id)
+    alt Kategori Bebas (Tidak Terikat Transaksi)
+        DB --> Controller: noRelation
+        Controller -> DB: deleteCategoryRecord(id)
+        DB --> Controller: statusDeleted
+        Controller --> UI: pesanSukses("Kategori Dihapus")
+    else Kategori Masih Digunakan Transaksi
+        DB --> Controller: relationExists
+        deactivate DB
+        Controller --> UI: pesanWarning("Kategori Masih Digunakan Transaksi")
+        deactivate Controller
+    end
+end
+UI --> User: tampilkanDaftarKategoriTerbarui()
+deactivate UI
+@enduml

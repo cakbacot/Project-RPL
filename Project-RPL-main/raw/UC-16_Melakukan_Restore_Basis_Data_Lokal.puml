@@ -1,0 +1,50 @@
+@startuml
+autonumber
+actor "Pengguna (User)" as User
+boundary "DatabaseUI" as UI
+control "DatabaseController" as Controller
+boundary "FileChooserUI" as FileChooser
+entity "Database SQLite" as DB
+
+title Sequence Diagram UC-16: Melakukan Restore Basis Data Lokal
+
+User -> UI: klikRestoreBasisData()
+activate UI
+UI --> User: tampilkanDialogKonfirmasiPenimpaanData()
+
+alt Pengguna Menyetujui Konfirmasi
+    User -> UI: setujuPenimpaanData("Ya")
+    UI -> Controller: initRestoreProcess()
+    activate Controller
+
+    Controller -> FileChooser: openFileSelectionDialog()
+    activate FileChooser
+    FileChooser --> User: tampilkanPilihFileDB()
+    User -> FileChooser: pilihFileBackup(backupFilePath)
+    FileChooser --> Controller: backupFilePath
+    deactivate FileChooser
+
+    Controller -> Controller: validateSQLiteFileSchema(backupFilePath)
+
+    alt File Valid & Tidak Corrupted
+        Controller -> DB: replaceActiveDatabaseFile(backupFilePath)
+        activate DB
+        Controller -> DB: restartDatabaseConnection()
+        DB --> Controller: connectionRestored
+        deactivate DB
+
+        Controller --> UI: notifySuccessAndReloadUI("Restore Berhasil")
+        UI --> User: muatUlangAntarmukaAndTampilkanSukses()
+
+    else File Backup Rusak / Corrupted
+        Controller --> UI: pesanError("File Database Tidak Valid")
+        UI --> User: tampilkanErrorFileCorrupted()
+    end
+
+else Pengguna Menolak Konfirmasi
+    User -> UI: setujuPenimpaanData("Tidak")
+    UI --> User: batalRestore()
+    deactivate Controller
+    deactivate UI
+end
+@enduml

@@ -1,0 +1,31 @@
+@startuml
+autonumber
+actor "Pengguna (User)" as User
+boundary "ReportUI" as UI
+control "ReportController" as Controller
+entity "Database SQLite" as DB
+
+title Sequence Diagram UC-12: Melihat Laporan Keuangan
+
+User -> UI: bukaHalamanLaporan()
+activate UI
+User -> UI: pilihFilterPeriodeAndKlikTampilkan(startDate, endDate)
+UI -> Controller: generateFinancialReport(startDate, endDate)
+activate Controller
+
+Controller -> DB: queryAgregasiKeuangan(startDate, endDate)
+activate DB
+
+alt Data Transaksi Pada Periode Ada
+    DB --> Controller: reportDataAgregat
+    Controller --> UI: renderReportTables(pemasukan, pengeluaran, saldo)
+    UI --> User: tampilkanTabelRekapitulasiLaporan()
+else Data Transaksi Kosong
+    DB --> Controller: noDataFound
+    deactivate DB
+    Controller --> UI: renderEmptyReportMessage("Tidak Ada Transaksi pada Periode Ini")
+    deactivate Controller
+    UI --> User: tampilkanPesanLaporanKosong()
+    deactivate UI
+end
+@enduml

@@ -1,0 +1,31 @@
+@startuml
+autonumber
+actor "Pengguna (User)" as User
+boundary "ReportUI" as UI
+control "ChartController" as Controller
+entity "Database SQLite" as DB
+
+title Sequence Diagram UC-13: Melihat Grafik Tren Keuangan
+
+User -> UI: pilihTampilanGrafik()
+activate UI
+UI -> Controller: getChartData()
+activate Controller
+
+Controller -> DB: fetchTimeSeriesData()
+activate DB
+
+alt Data Seri Waktu Tersedia
+    DB --> Controller: timeSeriesList
+    Controller -> Controller: renderChartModel(timeSeriesList)
+    Controller --> UI: displayLineOrBarChart(chartModel)
+    UI --> User: tampilkanVisualisasiGrafik()
+else Data Kosong
+    DB --> Controller: emptyData
+    deactivate DB
+    Controller --> UI: displayFlatChart("Grafik Kosong")
+    deactivate Controller
+    UI --> User: tampilkanGrafikDatar()
+    deactivate UI
+end
+@enduml

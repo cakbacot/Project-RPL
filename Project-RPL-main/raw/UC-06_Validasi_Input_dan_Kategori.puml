@@ -1,0 +1,28 @@
+@startuml
+autonumber
+participant "CallerController" as Caller
+control "ValidationControl" as Val
+entity "Database SQLite" as DB
+
+title Sequence Diagram UC-06: Validasi Input & Kategori (Included)
+
+Caller -> Val: validateTransactionInput(data)
+activate Val
+
+Val -> Val: checkNominalPositif(data.nominal)
+alt Nominal <= 0 Atau Bukan Angka
+    Val --> Caller: returnStatus(INVALID_NOMINAL)
+else Nominal Valid (> 0)
+    Val -> DB: verifyCategoryExists(data.kategoriId)
+    activate DB
+    alt Kategori Terdaftar
+        DB --> Val: categoryExists
+        Val --> Caller: returnStatus(VALID_SUCCESS)
+    else Kategori Tidak Terdaftar
+        DB --> Val: categoryNotFound
+        deactivate DB
+        Val --> Caller: returnStatus(INVALID_CATEGORY)
+        deactivate Val
+    end
+end
+@enduml

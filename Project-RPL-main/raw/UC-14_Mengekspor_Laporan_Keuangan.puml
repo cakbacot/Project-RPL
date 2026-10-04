@@ -1,0 +1,38 @@
+@startuml
+autonumber
+actor "Pengguna (User)" as User
+boundary "ReportUI" as UI
+control "ExportController" as Controller
+boundary "FileChooserUI" as FileChooser
+entity "Disk Lokal" as Disk
+
+title Sequence Diagram UC-14: Mengekspor Laporan Keuangan (Extended)
+
+User -> UI: klikEksporLaporanPDFatauCSV()
+activate UI
+UI -> Controller: initExportProcess()
+activate Controller
+
+Controller -> FileChooser: openSaveDialog()
+activate FileChooser
+FileChooser --> User: tampilkanPilihFolderAndNamaFile()
+User -> FileChooser: pilihLokasiAndSimpan(filePath)
+FileChooser --> Controller: targetFilePath
+deactivate FileChooser
+
+Controller -> Disk: convertAndWriteToFile(targetFilePath, reportData)
+activate Disk
+
+alt Penulisan File Berhasil
+    Disk --> Controller: writeSuccess
+    Controller --> UI: pesanSukses("File Laporan Berhasil Diekspor")
+    UI --> User: tampilkanNotifikasiEksporSukses()
+else Penulisan File Gagal (Disk Penuh / Hak Akses Ditolak)
+    Disk --> Controller: writeError
+    deactivate Disk
+    Controller --> UI: pesanError("Gagal Menulis File ke Disk")
+    deactivate Controller
+    UI --> User: tampilkanErrorPenyimpanan()
+    deactivate UI
+end
+@enduml

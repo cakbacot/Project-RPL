@@ -1,0 +1,53 @@
+@startuml
+autonumber
+actor "Pengguna (User)" as User
+boundary "TransactionFormUI" as UI
+control "TransactionController" as Controller
+entity "Database SQLite" as DB
+
+title Sequence Diagram UC-02: Mencatat Transaksi Baru
+
+User -> UI: bukaFormInput()
+activate UI
+UI --> User: tampilkanFormInput()
+
+User -> UI: inputDataAndKlikSimpan(tanggal, jenis, kategori, nominal, ket)
+UI -> Controller: simpanTransaksi(data)
+activate Controller
+
+note over Controller: UC-06: Validasi Input & Kategori
+Controller -> Controller: validasiInputAndKategori(data)
+
+alt Data Valid (Nominal > 0 & Kategori Ada)
+    Controller -> DB: insertTransaction(data)
+    activate DB
+    DB --> Controller: statusSukses
+    deactivate DB
+
+    note over Controller: UC-07: Pembaruan Saldo Otomatis
+    Controller -> DB: recalculateTotalBalance()
+    activate DB
+    DB --> Controller: balanceUpdated
+    deactivate DB
+
+    opt Jenis Transaksi = Pengeluaran
+        note over Controller: UC-11: Evaluation Budget Alert
+        Controller -> DB: checkBudgetLimit()
+        activate DB
+        DB --> Controller: budgetStatus
+        deactivate DB
+        opt Pengeluaran >= 80% Budget Limit
+            Controller -> UI: showBudgetAlertNotification()
+        end
+    end
+
+    Controller --> UI: pesanSukses("Transaksi Berhasil Disimpan")
+    UI --> User: tampilkanNotifikasiSuksesAndResetForm()
+
+else Data Tidak Valid (Nominal <= 0 / Error)
+    Controller --> UI: pesanError("Input Tidak Valid")
+    deactivate Controller
+    UI --> User: tampilkanPesanPeringatanError()
+    deactivate UI
+end
+@enduml

@@ -1,0 +1,29 @@
+@startuml
+autonumber
+actor "Pengguna (User)" as User
+boundary "BudgetUI" as UI
+control "BudgetController" as Controller
+entity "Database SQLite" as DB
+
+title Sequence Diagram UC-09: Mengatur Batas Pengeluaran
+
+User -> UI: bukaHalamanPengaturanBatas()
+activate UI
+User -> UI: pilihTargetPeriodeAndInputNominal(periode, nominal)
+UI -> Controller: saveBudgetLimit(periode, nominal)
+activate Controller
+
+alt Nominal > 0 (Valid)
+    Controller -> DB: insertOrUpdateBudgetRecord(periode, nominal)
+    activate DB
+    DB --> Controller: statusSaved
+    deactivate DB
+    Controller --> UI: pesanSukses("Batas Anggaran Tersimpan")
+    UI --> User: tampilkanNotifikasiBerhasil()
+else Nominal <= 0 (Tidak Valid)
+    Controller --> UI: pesanPeringatan("Nominal Harus Lebih Besar dari 0")
+    deactivate Controller
+    UI --> User: tampilkanPeringatanInput()
+    deactivate UI
+end
+@enduml

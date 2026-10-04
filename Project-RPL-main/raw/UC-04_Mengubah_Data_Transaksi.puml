@@ -1,0 +1,49 @@
+@startuml
+autonumber
+actor "Pengguna (User)" as User
+boundary "EditTransactionUI" as UI
+control "TransactionController" as Controller
+entity "Database SQLite" as DB
+
+title Sequence Diagram UC-04: Mengubah Data Transaksi
+
+User -> UI: pilihTransaksiAndKlikEdit(id)
+activate UI
+UI -> Controller: getTransactionById(id)
+activate Controller
+Controller -> DB: selectById(id)
+activate DB
+DB --> Controller: transactionDetail
+deactivate DB
+Controller --> UI: populateForm(transactionDetail)
+deactivate Controller
+
+User -> UI: ubahDataAndKlikSimpanPerubahan(newData)
+UI -> Controller: updateTransaksi(id, newData)
+activate Controller
+
+note over Controller: UC-06: Validasi Input
+Controller -> Controller: validasiInputAndKategori(newData)
+
+alt Data Valid
+    Controller -> DB: updateTransactionRecord(id, newData)
+    activate DB
+    DB --> Controller: statusUpdated
+    deactivate DB
+
+    note over Controller: UC-07: Pembaruan Saldo Otomatis
+    Controller -> DB: recalculateTotalBalance()
+    activate DB
+    DB --> Controller: balanceUpdated
+    deactivate DB
+
+    Controller --> UI: pesanSukses("Data Berhasil Diperbarui")
+    UI --> User: tampilkanNotifikasiSukses()
+
+else Data Tidak Valid
+    Controller --> UI: pesanError("Nilai Tidak Valid, Data Lama Dipertahankan")
+    deactivate Controller
+    UI --> User: tampilkanErrorValidasi()
+    deactivate UI
+end
+@enduml

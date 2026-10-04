@@ -1,0 +1,44 @@
+@startuml
+autonumber
+actor "Pengguna (User)" as User
+boundary "DatabaseUI" as UI
+control "DatabaseController" as Controller
+boundary "FileChooserUI" as FileChooser
+entity "Database SQLite" as DB
+entity "Disk Lokal" as Disk
+
+title Sequence Diagram UC-15: Melakukan Backup Basis Data Lokal
+
+User -> UI: klikBackupBasisData()
+activate UI
+UI -> Controller: initBackupProcess()
+activate Controller
+
+Controller -> FileChooser: openFolderChooser()
+activate FileChooser
+FileChooser --> User: tampilkanPilihFolderTujuan()
+User -> FileChooser: pilihFolderTujuan(destinationPath)
+FileChooser --> Controller: destinationPath
+deactivate FileChooser
+
+Controller -> DB: getActiveDatabaseFilePath()
+activate DB
+DB --> Controller: sourceDbPath
+deactivate DB
+
+Controller -> Disk: copyFile(sourceDbPath, destinationPath)
+activate Disk
+
+alt Penyalinan Berhasil
+    Disk --> Controller: copySuccess
+    Controller --> UI: pesanSukses("Backup Database Berhasil Disimpan")
+    UI --> User: tampilkanNotifikasiBackupBerhasil()
+else Penyalinan Gagal
+    Disk --> Controller: copyFailed
+    deactivate Disk
+    Controller --> UI: pesanError("Gagal Melakukan Backup File")
+    deactivate Controller
+    UI --> User: tampilkanNotifikasiGagalBackup()
+    deactivate UI
+end
+@enduml

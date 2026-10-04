@@ -1,0 +1,30 @@
+@startuml
+autonumber
+actor "Pengguna (User)" as User
+boundary "TransactionHistoryUI" as UI
+control "TransactionController" as Controller
+entity "Database SQLite" as DB
+
+title Sequence Diagram UC-03: Melihat Riwayat Transaksi
+
+User -> UI: bukaMenuRiwayatTransaksi()
+activate UI
+UI -> Controller: getTransactionHistory()
+activate Controller
+
+Controller -> DB: selectTransactionsSortedByDateDESC()
+activate DB
+
+alt Terdapat Rekaman Transaksi
+    DB --> Controller: transactionList
+    Controller --> UI: renderTransactionTable(transactionList)
+    UI --> User: tampilkanTabelRiwayat()
+else Belum Ada Transaksi
+    DB --> Controller: emptyList
+    deactivate DB
+    Controller --> UI: renderEmptyTableMessage("Belum Ada Transaksi")
+    deactivate Controller
+    UI --> User: tampilkanKeteranganKosong()
+    deactivate UI
+end
+@enduml
